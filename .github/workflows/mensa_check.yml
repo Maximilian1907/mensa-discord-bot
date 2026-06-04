@@ -16,6 +16,8 @@ on:
 jobs:
   check-speiseplan:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     
     steps:
       - name: 📥 Repository auschecken
@@ -54,5 +56,7 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: last_plan_hash.txt
+          path: |
+            last_plan_hash.txt
+            last_plan_week.txt
           key: mensa-plan-state-v1
