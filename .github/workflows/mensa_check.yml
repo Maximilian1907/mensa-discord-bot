@@ -38,9 +38,9 @@ jobs:
           path: |
             last_plan_hash.txt
             last_plan_week.txt
-          key: mensa-plan-state-v1
-          # Kein restore-keys mit Suffix, damit immer der gleiche Key
-          # überschrieben wird und der neueste Hash geladen wird.
+          key: mensa-plan-state-${{ github.run_id }}
+          restore-keys: |
+            mensa-plan-state-
 
       - name: 🔍 Speiseplan prüfen
         env:
@@ -59,4 +59,4 @@ jobs:
           path: |
             last_plan_hash.txt
             last_plan_week.txt
-          key: mensa-plan-state-v1
+          key: mensa-plan-state-${{ github.run_id }}
