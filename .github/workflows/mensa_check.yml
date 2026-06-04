@@ -1,0 +1,58 @@
+name: Mensa Speiseplan Check
+
+on:
+  schedule:
+    # Alle 30 Minuten checken
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    # Manuell auslösbar über GitHub UI
+    inputs:
+      force:
+        description: 'Erzwingt Discord-Post auch ohne Änderung'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  check-speiseplan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: 📦 Dependencies installieren
+        run: pip install -r requirements.txt
+
+      - name: 📂 Letzten State laden
+        uses: actions/cache@v4
+        with:
+          path: |
+            last_plan_hash.txt
+            last_plan_week.txt
+          key: mensa-plan-state-v1
+          # Kein restore-keys mit Suffix, damit immer der gleiche Key
+          # überschrieben wird und der neueste Hash geladen wird.
+
+      - name: 🔍 Speiseplan prüfen
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            python scrape_mensa.py --force
+          else
+            python scrape_mensa.py
+          fi
+
+      - name: 💾 State speichern
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: last_plan_hash.txt
+          key: mensa-plan-state-v1
