@@ -1,102 +1,102 @@
-# 🍽️ Mensa Discord Bot
+<div align="center">
+  <h1>Mensa Discord Bot</h1>
+  <p><strong>Campus Restaurant Culinaria</strong></p>
+  
+  [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+  [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-F7DF1E?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-Automatische Discord-Benachrichtigung wenn ein neuer Wochenplan für die Campus-Mensa online geht.
+  <p>Ein automatisierter Web-Scraper und Discord-Bot, der den aktuellen Speiseplan der Campus-Mensa ueberwacht und Aenderungen in Echtzeit als Rich-Embed in einen Discord-Channel pusht.</p>
+</div>
 
-## So funktioniert's
+---
 
+## Features
+
+- **Automatisches Scraping**: Ueberwacht dynamisch die WordPress/AJAX-Endpoints der Mensa-Website.
+- **Smart Update Detection**: Integriertes State-Management via `SHA256`-Hashing. Postet nur, wenn sich der Speiseplan oder die Angebote wirklich geaendert haben.
+- **Rich Discord Embeds**: 
+  - Farbcodierte Darstellung je nach Hauptgericht.
+  - Automatische Erkennung von veganen und vegetarischen Optionen.
+  - Extraktion von Preisen (Studierende / Gaeste) und Inhaltsstoffen.
+- **Angebots-Tracking**: Erfasst neben den Tagesgerichten auch Aktions-Banner und die "Angebote der Woche" (Currywurst, Pasta, Pizza).
+- **Serverless Architecture**: 100% kostenloser Betrieb durch GitHub Actions. Kein eigener Server (VPS/RasPi) notwendig.
+
+## Architektur
+
+Der Bot besteht aus einem in Python geschriebenen Web-Scraper (`BeautifulSoup4`), der per **Cron-Job** ueber GitHub Actions ausgefuehrt wird.
+
+```mermaid
+graph LR
+    A[GitHub Actions<br>Cron Job] -->|Trigger 30 min| B(Python Scraper)
+    B -->|GET| C[Mensa API / HTML]
+    B -->|Compare Hash| D[(GitHub Cache)]
+    B -->|Webhook| E[Discord Channel]
 ```
-Alle 30 Min (via GitHub Actions):
-  → Mensa-Website scrapen ("Nächste Woche")
-  → Mit letztem bekannten Plan vergleichen  
-  → Wenn NEU → Schöne Nachricht an Discord senden 📨
-```
 
-## Setup in 5 Minuten
+---
 
-### 1️⃣ Discord Webhook erstellen
+## Setup & Deployment (Fuer deinen eigenen Server)
 
-1. Öffne deinen **Discord Server**
-2. Gehe zu **Server-Einstellungen → Integrationen → Webhooks**
-3. Klicke **Neuer Webhook**
-4. Wähle den Channel aus, in dem die Nachrichten erscheinen sollen
-5. **Kopiere die Webhook-URL** (sieht aus wie `https://discord.com/api/webhooks/123.../abc...`)
+Moechtest du diesen Bot fuer deine Fachschaft oder deinen Kommilitonen-Server nutzen? Der Bot ist Open-Source und in 5 Minuten einsatzbereit!
 
-### 2️⃣ GitHub Repository erstellen
+### 1. Repository Forken / Klonen
+Erstelle einen [Fork](https://github.com/Maximilian1907/mensa-discord-bot/fork) dieses Repositories auf deinem eigenen GitHub-Account.
 
-1. Erstelle ein neues Repository auf [github.com](https://github.com/new) (kann privat sein)
-2. Pushe diesen Ordner dorthin:
-   ```bash
-   cd Mensa_DC
-   git init
-   git add .
-   git commit -m "Initial commit: Mensa Discord Bot"
-   git branch -M main
-   git remote add origin https://github.com/DEIN-USERNAME/mensa-discord-bot.git
-   git push -u origin main
-   ```
+### 2. Discord Webhook erstellen
+1. Gehe in deinem Discord-Server auf **Servereinstellungen** -> **Integrationen** -> **Webhooks**.
+2. Erstelle einen neuen Webhook, nenne ihn z. B. `Mensa Bot` und waehle den Ziel-Channel aus.
+3. Kopiere die Webhook-URL.
 
-### 3️⃣ Webhook-URL als GitHub Secret speichern
-
-1. Gehe in deinem Repo zu **Settings → Secrets and variables → Actions**
-2. Klicke **New repository secret**
+### 3. GitHub Secrets konfigurieren
+1. Gehe in deinem geforkten Repository auf **Settings** -> **Secrets and variables** -> **Actions**.
+2. Klicke auf **New repository secret**.
 3. Name: `DISCORD_WEBHOOK_URL`
-4. Value: Die kopierte Webhook-URL von Schritt 1
-5. **Add secret**
+4. Secret: *Fuege hier deine Discord Webhook-URL ein*.
 
-### 4️⃣ GitHub Actions aktivieren
+Das war's! Der Bot laeuft nun vollautomatisch im Hintergrund.
 
-- GitHub Actions ist standardmäßig aktiviert
-- Der Workflow läuft automatisch **alle 30 Minuten**
-- Du kannst ihn auch manuell auslösen: **Actions → Mensa Speiseplan Check → Run workflow**
+---
 
-## Lokaler Test
+## Lokale Entwicklung
+
+Falls du den Bot anpassen oder erweitern moechtest:
 
 ```bash
-# Dependencies installieren
+# Repository klonen
+git clone https://github.com/Maximilian1907/mensa-discord-bot.git
+cd mensa-discord-bot
+
+# Virtuelles Environment erstellen & aktivieren (empfohlen)
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Abhaengigkeiten installieren
 pip install -r requirements.txt
 
-# Test-Modus (zeigt Nachricht an, sendet nichts)
+# Test-Modus ausfuehren (Gibt JSON & Vorschau im Terminal aus, sendet NICHTS an Discord)
 python scrape_mensa.py --test
 
-# Mit echtem Discord-Post (Webhook-URL setzen)
-set DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
-python scrape_mensa.py
-
-# Post erzwingen (auch wenn kein neuer Plan)
+# Mit echtem Webhook testen
+export DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
 python scrape_mensa.py --force
-
-# Aktuelle Woche statt nächste Woche prüfen
-python scrape_mensa.py --check-current --test
 ```
 
-## Befehle
+### CLI Argumente
 
 | Flag | Beschreibung |
 |---|---|
-| `--test` | Zeigt die Discord-Nachricht nur an, sendet sie nicht |
-| `--force` | Sendet auch wenn kein neuer Plan erkannt wurde |
-| `--check-current` | Prüft die aktuelle statt die nächste Woche |
+| `--test` | Dry-Run Modus. Speichert keinen State, sendet keine Requests an Discord. |
+| `--force` | Ignoriert den Hash-Check und postet den Plan zwingend neu. |
+| `--check-current` | Prueft die "Aktuelle Woche" anstelle der "Naechsten Woche". |
 
-## Cron-Intervall ändern
+---
 
-In `.github/workflows/mensa_check.yml` die Zeile anpassen:
+## Laufzeiten & GitHub Actions
 
-```yaml
-# Alle 15 Minuten
-- cron: '*/15 * * * *'
+Der Bot ist so vorkonfiguriert, dass er **alle 30 Minuten zwischen 06:00 und 18:00 Uhr deutscher Zeit** laeuft (`*/30 4-16 * * *` in UTC). Dies stellt sicher, dass alle Updates erfasst werden, minimiert aber gleichzeitig den Verbrauch von GitHub Actions Freiminuten (verbraucht ca. ~700 von 2.000 monatlichen Freiminuten im Free-Tier).
 
-# Alle 30 Minuten (Standard)
-- cron: '*/30 * * * *'
+## Lizenz
 
-# Jede Stunde
-- cron: '0 * * * *'
-
-# Nur werktags 8-18 Uhr (spart Minuten)
-- cron: '*/30 8-18 * * 1-5'
-```
-
-> 💡 **Tipp**: `*/30 8-18 * * 1-5` ist empfohlen – Speisepläne werden nur an Werktagen tagsüber aktualisiert. Das spart ~70% der GitHub Actions Minuten!
-
-## Kosten
-
-**Null.** GitHub Actions Free Tier bietet 2.000 Minuten/Monat. Dieser Bot braucht ca. 300-700 Min/Monat je nach Intervall.
+Dieses Projekt steht unter der **MIT License** - siehe die [LICENSE](LICENSE) Datei fuer Details. Feel free to use, modify and distribute!
