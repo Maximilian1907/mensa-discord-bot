@@ -2,8 +2,8 @@ name: Mensa Speiseplan Check
 
 on:
   schedule:
-    # Alle 30 Minuten checken
-    - cron: '*/30 * * * *'
+    # Alle 30 Minuten checken (06:00 - 18:00 Uhr deutsche Zeit)
+    - cron: '*/30 4-16 * * *'
   workflow_dispatch:
     # Manuell auslösbar über GitHub UI
     inputs:
