@@ -6,3 +6,4 @@ last_plan_hash.txt
 last_plan_week.txt
 .venv/
 venv/
+.DS_Store
